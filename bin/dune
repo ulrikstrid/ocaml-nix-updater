@@ -1,0 +1,4 @@
+(executable
+ (public_name ocaml_nix_updater)
+ (name main)
+ (libraries piaf fmt fmt.tty logs logs.fmt ocaml_nix_updater))
