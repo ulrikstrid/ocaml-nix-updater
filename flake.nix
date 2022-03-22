@@ -41,6 +41,7 @@
           defaultApp =
             flake-utils.lib.mkApp { drv = self.defaultPackage."${system}"; };
 
+          nixosModule = (import ./nix/module.nix);
         };
     in with flake-utils.lib; eachSystem defaultSystems out;
 
