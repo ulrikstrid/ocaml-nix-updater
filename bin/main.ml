@@ -1,6 +1,4 @@
 let tmp_path = "/tmp/ocaml-nix-updater"
-let opam_repo_path = tmp_path ^ "/opam"
-let nixpkgs_repo_path = tmp_path ^ "/nixpkgs"
 
 let setup_log ?style_renderer level =
   let pp_header src ppf (l, h) =
@@ -39,7 +37,7 @@ let error_handler _client_addr ?request:_ ~respond _err =
 let packages =
   Ocaml_nix_updater.Package_list.read "./packages_to_update.txt" |> Lwt_main.run
 
-let packages_data =
+let packages_data ~opam_repo_path ~nixpkgs_repo_path =
   Lazy.from_fun (fun () ->
       let open Lwt.Infix in
       List.map
@@ -53,7 +51,11 @@ let packages_data =
       |> Lwt.all
       >|= Ocaml_nix_updater.Package_data.filter)
 
-let request_handler ({ request; _ } : Unix.sockaddr Piaf.Server.ctx) =
+let request_handler
+    ~opam_repo_path
+    ~nixpkgs_repo_path
+    ({ request; _ } : Unix.sockaddr Piaf.Server.ctx)
+  =
   match request.meth with
   | `GET ->
     let open Lwt.Syntax in
@@ -63,7 +65,9 @@ let request_handler ({ request; _ } : Unix.sockaddr Piaf.Server.ctx) =
       ]
       |> Lwt.all
     in
-    let+ package_datas = Lazy.force packages_data in
+    let+ package_datas =
+      Lazy.force @@ packages_data ~opam_repo_path ~nixpkgs_repo_path
+    in
     let body =
       List.map
         (Format.asprintf "%a" Ocaml_nix_updater.Package_data.pp)
@@ -76,12 +80,15 @@ let request_handler ({ request; _ } : Unix.sockaddr Piaf.Server.ctx) =
 
 open Lwt.Infix
 
-let main port =
+let main port ~opam_repo_path ~nixpkgs_repo_path =
   let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
   Lwt.async (fun () ->
       Lwt_io.establish_server_with_client_socket
         listen_address
-        (Piaf.Server.create ?config:None ~error_handler request_handler)
+        (Piaf.Server.create
+           ?config:None
+           ~error_handler
+           (request_handler ~opam_repo_path ~nixpkgs_repo_path))
       >|= fun _server ->
       Printf.printf "Listening on port %i and echoing POST requests.\n%!" port);
   let forever, _ = Lwt.wait () in
@@ -100,10 +107,22 @@ let () =
       sigpipe
       (Signal_handle (fun _ -> Format.eprintf "handle sigpipe@.")));
   let port = ref 8080 in
+  let cwd = ref tmp_path in
+
   Arg.parse
-    [ "-p", Arg.Set_int port, " Listening port number (8080 by default)" ]
+    [ "-p", Arg.Set_int port, " Listening port number (8080 by default)"
+    ; ( "-c"
+      , Arg.Set_string cwd
+      , " Directory to clone data into (/tmp/ocaml-nix-updater by default)" )
+    ]
     ignore
-    "Echoes POST requests. Runs forever.";
+    "Creates a list of packages that needs to be updated.";
+
+  cwd := Astring.String.trim ~drop:(fun c -> c = '/') !cwd;
+
+  let opam_repo_path = !cwd ^ "/opam" in
+  let nixpkgs_repo_path = !cwd ^ "/nixpkgs" in
+
   let _ =
     [ Ocaml_nix_updater.Opam.prepare_repo opam_repo_path
     ; Ocaml_nix_updater.Nixpkgs.prepare_repo nixpkgs_repo_path
@@ -111,4 +130,4 @@ let () =
     |> Lwt.all
     |> Lwt_main.run
   in
-  main !port
+  main !port ~opam_repo_path ~nixpkgs_repo_path
