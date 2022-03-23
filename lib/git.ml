@@ -1,4 +1,9 @@
+let src = Logs.Src.create "git"
+
+module Log = (val Logs.src_log src : Logs.LOG)
+
 let clone ?(depth = 3000) repo target =
+  Logs.info (fun m -> m "Cloning %s into %s" repo target);
   Lwt_process.exec
     ("git", [| "git"; "clone"; "--depth=" ^ string_of_int depth; repo; target |])
 
