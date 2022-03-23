@@ -8,7 +8,7 @@ with ocamlPackages; rec {
     src = lib.filterGitSource {
       src = ./..;
       dirs = [ "test" "bin" "lib" ];
-      files = [ "dune-project" "ocaml_nix_updater.opam" ];
+      files = [ "dune-project" "ocaml_nix_updater.opam" "packages_to_update.txt" ];
     };
 
     # Static builds support, note that you need a static profile in your dune file
@@ -21,6 +21,7 @@ with ocamlPackages; rec {
     installPhase = ''
       mkdir -p $out/bin
       mv _build/default/bin/main.exe $out/bin/ocaml_nix_updater
+      cp ./packages_to_update.txt $out/packages_to_update.txt
     '';
 
     checkInputs = [ alcotest ];
