@@ -1,3 +1,6 @@
+(* Code in this file is borrowed from or heavily inspired by code provided in
+   slack by https://github.com/dra27 *)
+
 let src = Logs.Src.create "opam"
 
 module Log = (val Logs.src_log src : Logs.LOG)
