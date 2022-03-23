@@ -118,8 +118,6 @@ let () =
     ignore
     "Creates a list of packages that needs to be updated.";
 
-  cwd := Astring.String.trim ~drop:(fun c -> c = '/') !cwd;
-
   let opam_repo_path = !cwd ^ "/opam" in
   let nixpkgs_repo_path = !cwd ^ "/nixpkgs" in
 
