@@ -26,4 +26,4 @@ let get_name nixpkgs_path name =
   | None -> pname
 
 let prepare_repo nixpkgs_repo_path =
-  Git.clone_or_pull "git@github.com:nixos/nixpkgs.git" nixpkgs_repo_path
+  Git.clone_or_pull "https://github.com/NixOS/nixpkgs.git" nixpkgs_repo_path

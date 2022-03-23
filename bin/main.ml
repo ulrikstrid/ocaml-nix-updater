@@ -121,20 +121,6 @@ let () =
   let opam_repo_path = !cwd ^ "/opam" in
   let nixpkgs_repo_path = !cwd ^ "/nixpkgs" in
 
-  let depth = 3000 in
-  let s =
-    Lwt_process.pread_line
-      ( "git"
-      , [| "git"
-         ; "clone"
-         ; "--depth=" ^ string_of_int depth
-         ; "git@github.com:ocaml/opam-repository.git"
-         ; opam_repo_path
-        |] )
-    |> Lwt_main.run
-  in
-  Logs.info (fun m -> m "git clone output: %s" s);
-
   let _ =
     [ Ocaml_nix_updater.Opam.prepare_repo opam_repo_path
     ; Ocaml_nix_updater.Nixpkgs.prepare_repo nixpkgs_repo_path

@@ -51,4 +51,6 @@ let get_version repo_root name =
   package.version |> OpamPackage.Version.to_string
 
 let prepare_repo opam_repo_path =
-  Git.clone_or_pull "git@github.com:ocaml/opam-repository.git" opam_repo_path
+  Git.clone_or_pull
+    "https://github.com/ocaml/opam-repository.git"
+    opam_repo_path
