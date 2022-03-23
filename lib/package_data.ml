@@ -25,7 +25,13 @@ let get nixpkgs_path opam_path nixpkg opampkg =
   let pname = opampkg in
   Log.debug (fun m -> m "get: %s - %s" nixpkg pname);
   let next_version = Opam.get_version opam_path pname in
-  let update_page = Printf.sprintf "https://opam.ocaml.org/packages/%s/%s.%s" pname pname next_version in
+  let update_page =
+    Printf.sprintf
+      "https://opam.ocaml.org/packages/%s/%s.%s"
+      pname
+      pname
+      next_version
+  in
   { nixpkg; pname; curr_version; next_version; update_page }
 
 let filter ts =
