@@ -81,7 +81,7 @@ let request_handler
 open Lwt.Infix
 
 let main port ~opam_repo_path ~nixpkgs_repo_path =
-  let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
+  let listen_address = Unix.(ADDR_INET (inet6_addr_any, port)) in
   Lwt.async (fun () ->
       Lwt_io.establish_server_with_client_socket
         listen_address
