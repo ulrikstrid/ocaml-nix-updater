@@ -101,7 +101,7 @@ let _clean_tmp () =
   ()
 
 let () =
-  setup_log Info;
+  setup_log Debug;
   Sys.(
     set_signal
       sigpipe
