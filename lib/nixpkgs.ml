@@ -6,19 +6,25 @@ module Log = (val Logs.src_log src : Logs.LOG)
 
 let get_version nixpkgs_path name =
   Log.debug (fun m -> m "get_version: %s" name);
-  try
-    let+ version =
-      Lwt_process.pread_line
-        ~cwd:nixpkgs_path
-        ( "nix"
-        , [| "nix"; "eval"; "-f"; "./"; "ocamlPackages." ^ name ^ ".version" |]
-        )
-    in
-    Astring.String.trim ~drop:(fun c -> c = '"') version
-  with
-  | _ ->
-    Log.err (fun m -> m "get_version failed for %s" name);
-    Lwt.return ""
+
+  let+ version =
+    Lwt.catch
+      (fun () ->
+        Lwt_process.pread_line
+          ~cwd:nixpkgs_path
+          ( "nix"
+          , [| "nix"
+             ; "eval"
+             ; "-f"
+             ; "./"
+             ; "ocamlPackages." ^ name ^ ".version"
+            |] ))
+      (function
+        | _exn ->
+          Log.err (fun m -> m "get_version failed for %s" name);
+          Lwt.return "999999.99999")
+  in
+  Astring.String.trim ~drop:(fun c -> c = '"') version
 
 let get_name nixpkgs_path name =
   Log.debug (fun m -> m "get_name: %s" name);
