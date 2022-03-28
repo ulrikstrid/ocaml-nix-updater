@@ -13,7 +13,7 @@ type t =
 let pp ppf t =
   Format.fprintf
     ppf
-    "ocamlPackages.%s %s %s %s"
+    "ocaml4.13.1-%s %s %s %s"
     t.nixpkg
     t.curr_version
     t.next_version
@@ -21,10 +21,10 @@ let pp ppf t =
 
 let get nixpkgs_path opam_path nixpkg opampkg =
   let open Lwt.Syntax in
-  let+ curr_version = Nixpkgs.get_version nixpkgs_path nixpkg in
   let pname = opampkg in
   Log.debug (fun m -> m "get: %s - %s" nixpkg pname);
   let next_version = Opam.get_version opam_path pname in
+  let+ curr_version = Nixpkgs.get_version nixpkgs_path nixpkg in
   let update_page =
     Printf.sprintf
       "https://opam.ocaml.org/packages/%s/%s.%s"
