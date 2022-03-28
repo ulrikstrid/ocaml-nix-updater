@@ -41,17 +41,23 @@ let filter_latest packages =
   else !latest_packages
 
 let get_version repo_root name =
-  Log.debug (fun m -> m "get_version: %s" name);
-  let packages = get_packages_in repo_root in
-  let latest_versions = filter_latest packages in
-  let package =
-    List.find
-      (fun (pkg : OpamPackage.t) ->
-        let opam_name = pkg.name |> OpamPackage.Name.to_string in
-        opam_name = name)
-      (OpamPackage.Name.Map.values latest_versions)
-  in
-  package.version |> OpamPackage.Version.to_string
+  try
+    Log.debug (fun m -> m "get_version: %s" name);
+    let packages = get_packages_in repo_root in
+    let latest_versions = filter_latest packages in
+    let package =
+      List.find
+        (fun (pkg : OpamPackage.t) ->
+          let opam_name = pkg.name |> OpamPackage.Name.to_string in
+          opam_name = name)
+        (OpamPackage.Name.Map.values latest_versions)
+    in
+    package.version |> OpamPackage.Version.to_string
+  with
+  | _ ->
+    Log.err (fun m ->
+        m "get_version for %s failed, returning 0.0.0 as version" name);
+    "0.0.0"
 
 let prepare_repo opam_repo_path =
   Git.clone_or_pull
