@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
 
-    ocaml-overlay.url = "github:anmonteiro/nix-overlays";
+    ocaml-overlay.url = "github:anmonteiro/nix-overlays/auto-update-sources-2140478561";
     ocaml-overlay.inputs.nixpkgs.follows = "nixpkgs";
     ocaml-overlay.inputs.flake-utils.follows = "flake-utils";
   };

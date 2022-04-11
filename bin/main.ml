@@ -56,15 +56,28 @@ let request_handler
     ~nixpkgs_repo_path
     ({ request; _ } : Unix.sockaddr Piaf.Server.ctx)
   =
-  match request.meth with
-  | `GET ->
-    let open Lwt.Syntax in
-    let* _ =
-      [ Ocaml_nix_updater.Opam.prepare_repo opam_repo_path
-      ; Ocaml_nix_updater.Nixpkgs.prepare_repo nixpkgs_repo_path
-      ]
-      |> Lwt.all
+  let open Lwt.Syntax in
+  let () = Ocaml_nix_updater.Opam.clear_cache () in
+  let* _ =
+    [ Ocaml_nix_updater.Opam.prepare_repo opam_repo_path
+    ; Ocaml_nix_updater.Nixpkgs.prepare_repo nixpkgs_repo_path
+    ]
+    |> Lwt.all
+  in
+  match request.meth, String.split_on_char '/' request.target with
+  | `GET, [ nixpkg; opampkg ] ->
+    let+ package_data =
+      Ocaml_nix_updater.Package_data.get
+        nixpkgs_repo_path
+        opam_repo_path
+        nixpkg
+        opampkg
     in
+    let body =
+      Format.asprintf "%a" Ocaml_nix_updater.Package_data.pp package_data
+    in
+    Piaf.Response.of_string ~body `OK
+  | `GET, [] ->
     let+ package_datas =
       Lazy.force @@ packages_data ~opam_repo_path ~nixpkgs_repo_path
     in
@@ -74,9 +87,8 @@ let request_handler
         package_datas
       |> String.concat "\n"
     in
-    let () = Ocaml_nix_updater.Opam.clear_cache () in
     Piaf.Response.of_string ~body `OK
-  | _ -> assert false
+  | _, _ -> Piaf.Response.of_string ~body:"not found" `Not_found |> Lwt.return
 
 open Lwt.Infix
 
